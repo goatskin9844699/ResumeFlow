@@ -68,21 +68,16 @@ class Education(BaseModel):
 class Educations(BaseModel):
     education: List[Education] = Field(description="Educational qualifications, including degree, institution, dates, and relevant courses.")
 
-class Link(BaseModel):
-    name: str = Field(description="The name or title of the link.")
-    link: str = Field(description="The URL of the link.")
-
 class Project(BaseModel):
     name: str = Field(description="The name or title of the project."),
     type: str | None = Field(description="The type or category of the project, such as hackathon, publication, professional, and academic."),
     link: str = Field(description="A link to the project repository or demo.")
-    resources: Optional[List[Link]] = Field(description="Additional resources related to the project, such as documentation, slides, or videos.")
     from_date: str = Field(description="The start date of the project. e.g. Aug 2023"),
     to_date: str = Field(description="The end date of the project. e.g. Nov 2023"),
     description: List[str] = Field(description="A list of 3 bullet points describing the project experience, tailored to match job requirements. Each bullet point should follow the 'Did X by doing Y, achieved Z' format, quantify impact, implicitly use STAR methodology, use strong action verbs, and be highly relevant to the specific job. Ensure clarity, active voice, and impeccable grammar.")
 
 class Projects(BaseModel):
-    projects: List[Project] = Field(description="Project experiences, including project name, type, link, resources, dates, and description.")
+    projects: List[Project] = Field(description="Project experiences, including project name, type, link, dates, and description.")
 
 class SkillSection(BaseModel):
     name: str = Field(description="name or title of the skill group and competencies relevant to the job, such as programming languages, data science, tools & technologies, cloud & DevOps, full stack,  or soft skills.")
@@ -117,7 +112,7 @@ class ResumeSchema(BaseModel):
     work_experience: List[Experience] = Field(description="Work experiences, including job title, company, location, dates, and description.")
     education: List[Education] = Field(description="Educational qualifications, including degree, institution, dates, and relevant courses.")
     skill_section: List[SkillSection] = Field(description="Skill sections, each containing a group of skills and competencies relevant to the job.")
-    projects: List[Project] = Field(description="Project experiences, including project name, type, link, resources, dates, and description.")
+    projects: List[Project] = Field(description="Project experiences, including project name, type, link, dates, and description.")
     certifications: List[Certification] = Field(description="job relevant certifications that you have earned, including the name, issuing organization, and a link to verify the certification.")
     achievements: List[str] = Field(description="job relevant key accomplishments, awards, or recognitions that demonstrate your skills and abilities.")
 
