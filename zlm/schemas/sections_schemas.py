@@ -61,6 +61,15 @@ def format_validation_error(error: ValidationError, json_str: str) -> str:
 class Achievements(BaseModel):
     achievements: List[str] = Field(description="job relevant key accomplishments, awards, or recognitions that demonstrate your skills and abilities.")
 
+class Publication(BaseModel):
+    authors: str = Field(description="The authors of the publication, with main author in bold if applicable.")
+    title: str = Field(description="The title of the publication.")
+    location: str = Field(description="The venue or location where the publication was presented/published.")
+    date: str = Field(description="The date of publication or presentation in YYYY format.")
+
+class Publications(BaseModel):
+    publications: List[Publication] = Field(description="Academic or professional publications, including authors, title, venue, and date.")
+
 class Certification(BaseModel):
     name: str = Field(description="The name of the certification.")
     by: str = Field(description="The organization or institution that issued the certification.")
@@ -136,6 +145,7 @@ class ResumeSchema(BaseModel):
     education: List[Education] = Field(description="Educational qualifications, including degree, institution, dates, and relevant courses.")
     skill_section: List[SkillSection] = Field(description="Skill sections, each containing a group of skills and competencies relevant to the job.")
     projects: List[Project] = Field(description="Project experiences, including project name, type, link, dates, and description.")
+    publications: Optional[List[Publication]] = Field(description="Academic or professional publications, including authors, title, venue, and date.", default=[])
     certifications: List[Certification] = Field(description="job relevant certifications that you have earned, including the name, issuing organization, and a link to verify the certification.")
     achievements: List[str] = Field(description="job relevant key accomplishments, awards, or recognitions that demonstrate your skills and abilities.")
 
