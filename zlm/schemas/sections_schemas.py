@@ -145,7 +145,7 @@ class ResumeSchema(BaseModel):
     education: List[Education] = Field(description="Educational qualifications, including degree, institution, dates, and relevant courses.")
     skill_section: List[SkillSection] = Field(description="Skill sections, each containing a group of skills and competencies relevant to the job.")
     projects: List[Project] = Field(description="Project experiences, including project name, type, link, dates, and description.")
-    publications: List[Publication] = Field(description="Academic or professional publications, including authors, title, venue, and date.")
+    publications: Optional[List[Publication]] = Field(description="Academic or professional publications, including authors, title, venue, and date.", default=[])
     certifications: List[Certification] = Field(description="job relevant certifications that you have earned, including the name, issuing organization, and a link to verify the certification.")
     achievements: List[str] = Field(description="job relevant key accomplishments, awards, or recognitions that demonstrate your skills and abilities.")
     @classmethod
