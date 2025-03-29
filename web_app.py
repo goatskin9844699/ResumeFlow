@@ -123,11 +123,21 @@ try:
         provider = st.selectbox("Select provider([OpenAI](https://openai.com/blog/openai-api), [Gemini Pro](https://ai.google.dev/)):", LLM_MAPPING.keys(), index=default_provider_index)
     with col_2:
         if provider == "OpenRouter":
-            # Initialize OpenRouter without API key to fetch models
-            openrouter = OpenRouter(api_key="", model="", system_prompt="")
-            available_models = openrouter.get_available_models()
+            # Use cached models if available, otherwise fetch them
+            if 'openrouter_models' not in st.session_state:
+                try:
+                    openrouter = OpenRouter(api_key="", model="", system_prompt="")
+                    st.session_state.openrouter_models = openrouter.get_available_models()
+                except Exception as e:
+                    st.warning("Could not fetch OpenRouter models. Using default list.")
+                    st.session_state.openrouter_models = ["mistralai/mistral-large-2407", "mistralai/mistral-7b-instruct"]
+            
+            available_models = st.session_state.openrouter_models
             # Find index of mistralai/mistral-large-2407
-            default_index = available_models.index("mistralai/mistral-large-2407")
+            try:
+                default_index = available_models.index("mistralai/mistral-large-2407")
+            except ValueError:
+                default_index = 0
             model = st.selectbox("Select model:", available_models, index=default_index)
         else:
             model = st.selectbox("Select model:", LLM_MAPPING[provider]['model'])
