@@ -11,6 +11,7 @@ Copyright (c) 2023-2024 Saurabh Zinjad. All rights reserved | https://github.com
 from zlm.prompts.sections_prompt import EXPERIENCE, SKILLS, PROJECTS, EDUCATIONS, CERTIFICATIONS, ACHIEVEMENTS
 from zlm.schemas.sections_schemas import Achievements, Certifications, Educations, Experiences, Projects, SkillSections
 
+# Embedding Models
 GPT_EMBEDDING_MODEL = "text-embedding-ada-002"
 # text-embedding-3-large, text-embedding-3-small
 
@@ -19,9 +20,12 @@ GEMINI_EMBEDDING_MODEL = "models/text-embedding-004"
 
 OLLAMA_EMBEDDING_MODEL = "bge-m3"
 
+# LLM Models and Defaults
+DEFAULT_OPENROUTER_MODEL = "google/gemini-2.0-flash-lite-001"
 DEFAULT_LLM_PROVIDER = "OpenRouter"
-DEFAULT_LLM_MODEL = "mistralai/mistral-large-2407"
+DEFAULT_LLM_MODEL = DEFAULT_OPENROUTER_MODEL
 
+# Provider Configurations
 LLM_MAPPING = {
     'GPT': {
         "api_env": "OPENAI_API_KEY",
@@ -41,6 +45,7 @@ LLM_MAPPING = {
     # }
 }
 
+# Section Mappings
 section_mapping = {
     "work_experience": {"prompt":EXPERIENCE, "schema": Experiences},
     "skill_section": {"prompt":SKILLS, "schema": SkillSections},

@@ -201,27 +201,28 @@ class AutoApplyModel:
             return None, None
  
     @utils.measure_execution_time
-    def cover_letter_generator(self, job_details: dict, user_data: dict, need_pdf: bool = True, is_st=False):
-        """
-        Generates a cover letter based on the provided job details and user data.
+    def cover_letter_generator(self, job_details: dict, user_data: ResumeSchema, need_pdf: bool = True, is_st=False):
+        """Generate a cover letter based on the job details and user data.
 
         Args:
-            job_details (dict): A dictionary containing the job description.
-            user_data (dict): A dictionary containing the user's resume or work information.
+            job_details (dict): The job details.
+            user_data (ResumeSchema): The user profile data.
+            need_pdf (bool, optional): Whether to generate a PDF. Defaults to True.
+            is_st (bool, optional): Whether to use streamlit components. Defaults to False.
 
         Returns:
-            str: The generated cover letter.
-
-        Raises:
-            None
+            tuple: The generated cover letter text and the path to the PDF file.
         """
         print("\nGenerating Cover Letter...")
 
         try:
+            # Convert ResumeSchema to dict for the prompt
+            user_data_dict = user_data.model_dump()
+            
             prompt = PromptTemplate(
                 template=CV_GENERATOR,
                 input_variables=["my_work_information", "job_description"],
-                ).format(job_description=job_details, my_work_information=user_data)
+                ).format(job_description=job_details, my_work_information=user_data_dict)
 
             cover_letter = self.llm.get_response(prompt=prompt, expecting_longer_output=True)
 
@@ -235,18 +236,18 @@ class AutoApplyModel:
             return cover_letter, cv_path.replace(".txt", ".pdf")
         except Exception as e:
             print(e)
-            st.write("Error: \n\n",e)
+            if is_st: st.write("Error: \n\n",e)
             return None, None
 
 
     @utils.measure_execution_time
-    def resume_builder(self, job_details: dict, user_data: dict, is_st=False):
-        """
-        Builds a resume based on the provided job details and user data.
+    def resume_builder(self, job_details: dict, user_data: ResumeSchema, is_st=False):
+        """Build a resume based on the job details and user data.
 
         Args:
-            job_details (dict): A dictionary containing the job description.
-            user_data (dict): A dictionary containing the user's resume or work information.
+            job_details (dict): The job details.
+            user_data (ResumeSchema): The user profile data.
+            is_st (bool, optional): Whether to use streamlit components. Defaults to False.
 
         Returns:
             dict: The generated resume details.
@@ -259,18 +260,20 @@ class AutoApplyModel:
             if is_st: st.toast("Generating Resume Details...")
 
             resume_details = dict()
+            resume_path = None
 
             # Personal Information Section
             if is_st: st.toast("Processing Resume's Personal Info Section...")
             resume_details["personal"] = { 
-                "name": user_data["name"], 
-                "phone": user_data["phone"], 
-                "email": user_data["email"],
-                "github": user_data["media"]["github"], 
-                "linkedin": user_data["media"]["linkedin"]
+                "name": user_data.name, 
+                "phone": user_data.phone, 
+                "email": user_data.email,
+                "github": user_data.media.github, 
+                "linkedin": user_data.media.linkedin
                 }
-            st.markdown("**Personal Info Section**")
-            st.write(resume_details)
+            if is_st:
+                st.markdown("**Personal Info Section**")
+                st.write(resume_details)
 
             # Other Sections
             for section in ['work_experience', 'projects', 'skill_section', 'education', 'certifications', 'achievements']:
@@ -279,10 +282,28 @@ class AutoApplyModel:
 
                 json_parser = JsonOutputParser(pydantic_object=section_mapping[section]["schema"])
                 
+                # Convert Pydantic models to dict before JSON serialization
+                section_data = getattr(user_data, section)
+                
+                # Handle both individual models and lists of models
+                if hasattr(section_data, 'model_dump'):
+                    # If it's a single Pydantic model
+                    section_data = section_data.model_dump()
+                elif isinstance(section_data, (list, tuple)):
+                    # If it's a list/tuple of Pydantic models
+                    section_data = [
+                        item.model_dump() if hasattr(item, 'model_dump') else item 
+                        for item in section_data
+                    ]
+                
+                # Convert to JSON string for the prompt
+                section_data_json = json.dumps(section_data)
+                job_details_json = json.dumps(job_details)
+                
                 prompt = PromptTemplate(
                     template=section_mapping[section]["prompt"],
                     partial_variables={"format_instructions": json_parser.get_format_instructions()}
-                    ).format(section_data = json.dumps(user_data[section]), job_description = json.dumps(job_details))
+                    ).format(section_data=section_data_json, job_description=job_details_json)
 
                 response = self.llm.get_response(prompt=prompt, expecting_longer_output=True, need_json_output=True)
 
@@ -305,15 +326,13 @@ class AutoApplyModel:
 
             utils.write_json(resume_path, resume_details)
             resume_path = resume_path.replace(".json", ".pdf")
-            # st.write(f"resume_path: {resume_path}")
 
             resume_latex = latex_to_pdf(resume_details, resume_path)
-            # st.write(f"resume_pdf_path: {resume_pdf_path}")
 
             return resume_path, resume_details
         except Exception as e:
-            print(e)
-            st.write("Error: \n\n",e)
+            print(f"Error in resume_builder: {str(e)}")
+            if is_st: st.write("Error: \n\n",e)
             return resume_path, resume_details
 
     def resume_cv_pipeline(self, job_url: str, user_data_path: str = demo_data_path):
@@ -341,11 +360,9 @@ class AutoApplyModel:
 
             # Extract job details
             job_details, jd_path = self.job_details_extraction(url=job_url)
-            # job_details = read_json("/Users/saurabh/Downloads/JobLLM_Resume_CV/Netflix/Netflix_MachineLearning_JD.json")
 
             # Build resume
             resume_path, resume_details = self.resume_builder(job_details, user_data)
-            # resume_details = read_json("/Users/saurabh/Downloads/JobLLM_Resume_CV/Netflix/Netflix_MachineLearning_resume.json")
 
             # Generate cover letter
             cv_details, cv_path = self.cover_letter_generator(job_details, user_data)
@@ -354,15 +371,18 @@ class AutoApplyModel:
             for metric in ['jaccard_similarity', 'overlap_coefficient', 'cosine_similarity']:
                 print(f"\nCalculating {metric}...")
 
+                # Convert Pydantic models to dict for metrics calculation
+                user_data_dict = user_data.model_dump() if hasattr(user_data, 'model_dump') else user_data
+
                 if metric == 'vector_embedding_similarity':
                     llm = self.get_llm_instance('')
-                    user_personlization = globals()[metric](llm, json.dumps(resume_details), json.dumps(user_data))
+                    user_personlization = globals()[metric](llm, json.dumps(resume_details), json.dumps(user_data_dict))
                     job_alignment = globals()[metric](llm, json.dumps(resume_details), json.dumps(job_details))
-                    job_match = globals()[metric](llm, json.dumps(user_data), json.dumps(job_details))
+                    job_match = globals()[metric](llm, json.dumps(user_data_dict), json.dumps(job_details))
                 else:
-                    user_personlization = globals()[metric](json.dumps(resume_details), json.dumps(user_data))
+                    user_personlization = globals()[metric](json.dumps(resume_details), json.dumps(user_data_dict))
                     job_alignment = globals()[metric](json.dumps(resume_details), json.dumps(job_details))
-                    job_match = globals()[metric](json.dumps(user_data), json.dumps(job_details))
+                    job_match = globals()[metric](json.dumps(user_data_dict), json.dumps(job_details))
 
                 print("User Personlization Score(resume,master_data): ", user_personlization)
                 print("Job Alignment Score(resume,JD): ", job_alignment)
