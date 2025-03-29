@@ -9,8 +9,19 @@ Copyright (c) 2023-2024 Saurabh Zinjad. All rights reserved | https://github.com
 '''
 
 from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field, HttpUrl, ValidationError
+from pydantic import BaseModel, Field, HttpUrl, ValidationError, validator
 import json
+from datetime import datetime
+
+def validate_date_format(v: str) -> str:
+    """Validates that the date string is in MM/YYYY format or 'Present'."""
+    if v == "Present":
+        return v
+    try:
+        datetime.strptime(v, "%m/%Y")
+        return v
+    except ValueError:
+        raise ValueError("Date must be in MM/YYYY format (e.g., 08/2023) or 'Present'")
 
 def format_validation_error(error: ValidationError, json_str: str) -> str:
     """
@@ -61,20 +72,28 @@ class Certifications(BaseModel):
 class Education(BaseModel):
     degree: str = Field(description="The degree or qualification obtained and The major or field of study. e.g., Bachelor of Science in Computer Science.")
     university: str = Field(description="The name of the institution where the degree was obtained with location. e.g. Arizona State University, Tempe, USA")
-    from_date: str = Field(description="The start date of the education period. e.g., Aug 2023")
-    to_date: str = Field(description="The end date of the education period. e.g., May 2025")
+    from_date: str = Field(description="The start date of the education period in MM/YYYY format. e.g., 08/2023")
+    to_date: str = Field(description="The end date of the education period in MM/YYYY format. e.g., 05/2025")
     courses: List[str] = Field(description="Relevant courses or subjects studied during the education period. e.g. [Data Structures, Algorithms, Machine Learning]")
+
+    @validator('from_date', 'to_date')
+    def validate_dates(cls, v):
+        return validate_date_format(v)
 
 class Educations(BaseModel):
     education: List[Education] = Field(description="Educational qualifications, including degree, institution, dates, and relevant courses.")
 
 class Project(BaseModel):
-    name: str = Field(description="The name or title of the project."),
-    type: str | None = Field(description="The type or category of the project, such as hackathon, publication, professional, and academic."),
+    name: str = Field(description="The name or title of the project.")
+    type: str | None = Field(description="The type or category of the project, such as hackathon, publication, professional, and academic.")
     link: str = Field(description="A link to the project repository or demo.")
-    from_date: str = Field(description="The start date of the project. e.g. Aug 2023"),
-    to_date: str = Field(description="The end date of the project. e.g. Nov 2023"),
+    from_date: str = Field(description="The start date of the project in MM/YYYY format. e.g., 08/2023")
+    to_date: str = Field(description="The end date of the project in MM/YYYY format. e.g., 11/2023")
     description: List[str] = Field(description="A list of 3 bullet points describing the project experience, tailored to match job requirements. Each bullet point should follow the 'Did X by doing Y, achieved Z' format, quantify impact, implicitly use STAR methodology, use strong action verbs, and be highly relevant to the specific job. Ensure clarity, active voice, and impeccable grammar.")
+
+    @validator('from_date', 'to_date')
+    def validate_dates(cls, v):
+        return validate_date_format(v)
 
 class Projects(BaseModel):
     projects: List[Project] = Field(description="Project experiences, including project name, type, link, dates, and description.")
@@ -90,9 +109,13 @@ class Experience(BaseModel):
     role: str = Field(description="The job title or position held. e.g. Software Engineer, Machine Learning Engineer.")
     company: str = Field(description="The name of the company or organization.")
     location: str = Field(description="The location of the company or organization. e.g. San Francisco, USA.")
-    from_date: str = Field(description="The start date of the employment period. e.g., Aug 2023")
-    to_date: str = Field(description="The end date of the employment period. e.g., Nov 2025")
+    from_date: str = Field(description="The start date of the employment period in MM/YYYY format. e.g., 08/2023")
+    to_date: str = Field(description="The end date of the employment period in MM/YYYY format. e.g., 11/2025")
     description: List[str] = Field(description="A list of 3 bullet points describing the work experience, tailored to match job requirements. Each bullet point should follow the 'Did X by doing Y, achieved Z' format, quantify impact, implicitly use STAR methodology, use strong action verbs, and be highly relevant to the specific job. Ensure clarity, active voice, and impeccable grammar.")
+
+    @validator('from_date', 'to_date')
+    def validate_dates(cls, v):
+        return validate_date_format(v)
 
 class Experiences(BaseModel):
     work_experience: List[Experience] = Field(description="Work experiences, including job title, company, location, dates, and description.")
