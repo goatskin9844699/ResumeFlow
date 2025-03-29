@@ -248,9 +248,12 @@ try:
                 # Calculate metrics
                 st.subheader("Resume Metrics")
                 for metric in ['overlap_coefficient', 'cosine_similarity']:
-                    user_personalization = globals()[metric](json.dumps(resume_details), json.dumps(user_data))
+                    # Convert Pydantic models to dict for metrics calculation
+                    user_data_dict = user_data.model_dump() if hasattr(user_data, 'model_dump') else user_data
+                    
+                    user_personalization = globals()[metric](json.dumps(resume_details), json.dumps(user_data_dict))
                     job_alignment = globals()[metric](json.dumps(resume_details), json.dumps(job_details))
-                    job_match = globals()[metric](json.dumps(user_data), json.dumps(job_details))
+                    job_match = globals()[metric](json.dumps(user_data_dict), json.dumps(job_details))
 
                     if metric == "overlap_coefficient":
                         title = "Token Space"
