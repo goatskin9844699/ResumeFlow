@@ -12,6 +12,7 @@ import json
 import base64
 import shutil
 import zipfile
+from dotenv import load_dotenv
 import streamlit as st
 
 from zlm import AutoApplyModel
@@ -19,6 +20,16 @@ from zlm.utils.utils import display_pdf, download_pdf, read_file, read_json
 from zlm.utils.metrics import jaccard_similarity, overlap_coefficient, cosine_similarity
 from zlm.variables import LLM_MAPPING
 from zlm.utils.llm_models import OpenRouter
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Check which API keys are available
+available_api_keys = {
+    provider: bool(os.getenv(env_var))
+    for provider, config in LLM_MAPPING.items()
+    for env_var in [config["api_env"]]
+}
 
 st.set_page_config(
     page_title="Resume Generator",
@@ -98,7 +109,6 @@ try:
     with col_url:
         is_url_button = st.toggle('Job URL', False)
 
-    url, text = "", ""
     if is_url_button:
         url = st.text_input("Enter job posting URL:", placeholder="Enter job posting URL here...", label_visibility="collapsed")
     else:
@@ -118,7 +128,7 @@ try:
         else:
             model = st.selectbox("Select model:", LLM_MAPPING[provider]['model'])
     with col_3:
-        if provider != "Ollama":
+        if not available_api_keys[provider]:
             api_key = st.text_input("Enter API key:", type="password", value="")
         else:
             api_key = None

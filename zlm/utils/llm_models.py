@@ -11,6 +11,7 @@ import json
 import textwrap
 import pandas as pd
 import streamlit as st
+import os
 from openai import OpenAI
 from langchain_community.llms.ollama import Ollama
 from langchain_ollama import OllamaEmbeddings
@@ -19,13 +20,18 @@ from google.generativeai.types.generation_types import GenerationConfig
 import requests
 
 from zlm.utils.utils import parse_json_markdown
-from zlm.variables import GEMINI_EMBEDDING_MODEL, GPT_EMBEDDING_MODEL, OLLAMA_EMBEDDING_MODEL
+from zlm.variables import GEMINI_EMBEDDING_MODEL, GPT_EMBEDDING_MODEL, OLLAMA_EMBEDDING_MODEL, LLM_MAPPING
+
+def get_api_key(provider, api_key=None):
+    """Get API key from environment variable or provided value"""
+    env_var = LLM_MAPPING[provider]["api_env"]
+    return api_key or os.getenv(env_var)
 
 class ChatGPT:
-    def __init__(self, api_key, model, system_prompt):
+    def __init__(self, api_key=None, model="gpt-4", system_prompt=""):
         if system_prompt.strip():
             self.system_prompt = {"role": "system", "content": system_prompt}
-        self.client = OpenAI(api_key=api_key)
+        self.client = OpenAI(api_key=get_api_key("GPT", api_key))
         self.model = model
     
     def get_response(self, prompt, expecting_longer_output=False, need_json_output=False):
@@ -63,8 +69,8 @@ class ChatGPT:
 
 class Gemini:
     # TODO: Test and Improve support for Gemini API
-    def __init__(self, api_key, model, system_prompt):
-        genai.configure(api_key=api_key)
+    def __init__(self, api_key=None, model="gemini-1.5-flash", system_prompt=""):
+        genai.configure(api_key=get_api_key("Gemini", api_key))
         self.system_prompt = system_prompt
         self.model = model
     
@@ -173,11 +179,10 @@ class OllamaModel:
             print(e)
 
 class OpenRouter:
-    def __init__(self, api_key, model, system_prompt):
-        if system_prompt.strip():
-            self.system_prompt = {"role": "system", "content": system_prompt}
-        self.api_key = api_key
+    def __init__(self, api_key=None, model="openai/gpt-4", system_prompt=""):
+        self.api_key = get_api_key("OpenRouter", api_key)
         self.model = model
+        self.system_prompt = system_prompt
         self.base_url = "https://openrouter.ai/api/v1"
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
