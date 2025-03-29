@@ -18,7 +18,7 @@ import streamlit as st
 from zlm import AutoApplyModel
 from zlm.utils.utils import display_pdf, download_pdf, read_file, read_json
 from zlm.utils.metrics import jaccard_similarity, overlap_coefficient, cosine_similarity
-from zlm.variables import LLM_MAPPING
+from zlm.variables import LLM_MAPPING, DEFAULT_LLM_PROVIDER
 from zlm.utils.llm_models import OpenRouter
 
 # Load environment variables from .env file
@@ -118,13 +118,27 @@ try:
 
     col_1, col_2, col_3 = st.columns(3)
     with col_1:
-        provider = st.selectbox("Select provider([OpenAI](https://openai.com/blog/openai-api), [Gemini Pro](https://ai.google.dev/)):", LLM_MAPPING.keys())
+        # Find index of default provider
+        default_provider_index = list(LLM_MAPPING.keys()).index(DEFAULT_LLM_PROVIDER)
+        provider = st.selectbox("Select provider([OpenAI](https://openai.com/blog/openai-api), [Gemini Pro](https://ai.google.dev/)):", LLM_MAPPING.keys(), index=default_provider_index)
     with col_2:
         if provider == "OpenRouter":
-            # Initialize OpenRouter without API key to fetch models
-            openrouter = OpenRouter(api_key="", model="", system_prompt="")
-            available_models = openrouter.get_available_models()
-            model = st.selectbox("Select model:", available_models)
+            # Use cached models if available, otherwise fetch them
+            if 'openrouter_models' not in st.session_state:
+                try:
+                    openrouter = OpenRouter(api_key="", model="", system_prompt="")
+                    st.session_state.openrouter_models = openrouter.get_available_models()
+                except Exception as e:
+                    st.warning("Could not fetch OpenRouter models. Using default list.")
+                    st.session_state.openrouter_models = ["mistralai/mistral-large-2407", "mistralai/mistral-7b-instruct"]
+            
+            available_models = st.session_state.openrouter_models
+            # Find index of mistralai/mistral-large-2407
+            try:
+                default_index = available_models.index("mistralai/mistral-large-2407")
+            except ValueError:
+                default_index = 0
+            model = st.selectbox("Select model:", available_models, index=default_index)
         else:
             model = st.selectbox("Select model:", LLM_MAPPING[provider]['model'])
     with col_3:
