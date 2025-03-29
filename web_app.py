@@ -189,7 +189,8 @@ try:
             # Extract user data
             with st.status("Extracting user data..."):
                 user_data = resume_llm.user_data_extraction(file_path, is_st=True)
-                st.write(user_data)
+                if user_data:
+                    st.json(user_data.model_dump() if hasattr(user_data, 'model_dump') else user_data)
 
             shutil.rmtree(os.path.dirname(file_path))
 
