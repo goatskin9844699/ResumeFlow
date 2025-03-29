@@ -38,6 +38,12 @@ We're aiming to create a automated system that makes applying for jobs a breeze.
  - OS : Linux, Mac
  - Python : 3.11.6 and above
  - LLM API key: [OpenAI](https://platform.openai.com/account/api-keys) OR [Gemini Pro](https://ai.google.dev/)
+   - Optionally, you can store your API keys in a `.env` file to avoid entering them in the UI:
+     ```
+     OPENAI_API_KEY=your_openai_api_key_here
+     GEMINI_API_KEY=your_gemini_api_key_here
+     OPENROUTER_API_KEY=your_openrouter_api_key_here
+     ```
 
 ### 2.2. Package Installation - Use as Library
 
@@ -51,7 +57,7 @@ pip install zlm
 from zlm import AutoApplyModel
 
 job_llm = AutoApplyModel(
-    api_key="PROVIDE_API_KEY", 
+    api_key="PROVIDE_API_KEY",  # Not needed if using .env file
     provider="ENTER PROVIDER <gemini> or <openai>",
     downloads_dir="[optional] ENTER FOLDER PATH WHERE FILE GET DOWNLOADED, By default, 'downloads' folder"
 )
@@ -83,7 +89,14 @@ cd job-llm
         ```bash
         pip install -r resources/requirements.txt
         ```
-4. We also need to install following packages to conversion of latex to pdf
+ 4. (Optional) Create a `.env` file in the project root with your API keys:
+     ```
+     OPENAI_API_KEY=your_openai_api_key_here
+     GEMINI_API_KEY=your_gemini_api_key_here
+     OPENROUTER_API_KEY=your_openrouter_api_key_here
+     ```
+     When using `.env`, the API key input fields will be hidden in the UI.
+5. We also need to install following packages to conversion of latex to pdf
     - For linux
         ```bash
         sudo apt-get install texlive-latex-base texlive-fonts-recommended texlive-fonts-extra
@@ -94,11 +107,11 @@ cd job-llm
         brew install basictex
         sudo tlmgr install enumitem fontawesome
         ```
-5. If you want to run ollama models
+6. If you want to run ollama models
     ```sh
     ollama pull llama3.1
     ```
-6. Run following script to get result
+7. Run following script to get result
 ```bash
 >>> python main.py /
     --url "JOB_POSTING_URL" /
