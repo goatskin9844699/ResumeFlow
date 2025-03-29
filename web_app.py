@@ -18,6 +18,7 @@ from zlm import AutoApplyModel
 from zlm.utils.utils import display_pdf, download_pdf, read_file, read_json
 from zlm.utils.metrics import jaccard_similarity, overlap_coefficient, cosine_similarity
 from zlm.variables import LLM_MAPPING
+from zlm.utils.llm_models import OpenRouter
 
 st.set_page_config(
     page_title="Resume Generator",
@@ -109,7 +110,13 @@ try:
     with col_1:
         provider = st.selectbox("Select provider([OpenAI](https://openai.com/blog/openai-api), [Gemini Pro](https://ai.google.dev/)):", LLM_MAPPING.keys())
     with col_2:
-        model = st.selectbox("Select model:", LLM_MAPPING[provider]['model'])
+        if provider == "OpenRouter":
+            # Initialize OpenRouter without API key to fetch models
+            openrouter = OpenRouter(api_key="", model="", system_prompt="")
+            available_models = openrouter.get_available_models()
+            model = st.selectbox("Select model:", available_models)
+        else:
+            model = st.selectbox("Select model:", LLM_MAPPING[provider]['model'])
     with col_3:
         if provider != "Ollama":
             api_key = st.text_input("Enter API key:", type="password", value="")

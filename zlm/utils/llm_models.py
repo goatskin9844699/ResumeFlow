@@ -16,6 +16,7 @@ from langchain_community.llms.ollama import Ollama
 from langchain_ollama import OllamaEmbeddings
 import google.generativeai as genai
 from google.generativeai.types.generation_types import GenerationConfig
+import requests
 
 from zlm.utils.utils import parse_json_markdown
 from zlm.variables import GEMINI_EMBEDDING_MODEL, GPT_EMBEDDING_MODEL, OLLAMA_EMBEDDING_MODEL
@@ -168,5 +169,116 @@ class OllamaModel:
             
             return df
         
+        except Exception as e:
+            print(e)
+
+class OpenRouter:
+    def __init__(self, api_key, model, system_prompt):
+        if system_prompt.strip():
+            self.system_prompt = {"role": "system", "content": system_prompt}
+        self.api_key = api_key
+        self.model = model
+        self.base_url = "https://openrouter.ai/api/v1"
+        self.headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "HTTP-Referer": "https://github.com/Ztrimus/job-llm",
+            "Content-Type": "application/json"
+        }
+        self._available_models = None
+        self._last_model_fetch = 0
+        self._model_cache_duration = 3600  # Cache for 1 hour
+    
+    def get_available_models(self):
+        """Fetch available models from OpenRouter API with caching."""
+        import time
+        
+        current_time = time.time()
+        
+        # Return cached models if they exist and are not expired
+        if self._available_models and (current_time - self._last_model_fetch) < self._model_cache_duration:
+            return self._available_models
+            
+        try:
+            # Models endpoint doesn't require authentication
+            response = requests.get(
+                f"{self.base_url}/models"
+            )
+            
+            if response.status_code != 200:
+                raise Exception(f"OpenRouter API error: {response.text}")
+            
+            models_data = response.json()
+            # Extract model IDs from the response
+            self._available_models = [model['id'] for model in models_data.get('data', [])]
+            self._last_model_fetch = current_time
+            return self._available_models
+            
+        except Exception as e:
+            print(f"Error fetching OpenRouter models: {e}")
+            # Return default models if API call fails
+            return [
+                "anthropic/claude-3-opus-20240229",
+                "anthropic/claude-3-sonnet-20240229",
+                "meta-llama/codellama-70b-instruct",
+                "google/gemini-pro",
+                "google/gemini-2.0-flash-lite-001",
+                "openai/gpt-4-turbo-preview",
+                "openai/gpt-3.5-turbo"
+            ]
+    
+    def get_response(self, prompt, expecting_longer_output=False, need_json_output=False):
+        user_prompt = {"role": "user", "content": prompt}
+
+        try:
+            messages = [self.system_prompt, user_prompt] if hasattr(self, 'system_prompt') else [user_prompt]
+            
+            data = {
+                "model": self.model,
+                "messages": messages,
+                "temperature": 0,
+                "max_tokens": 4000 if expecting_longer_output else None,
+                "response_format": { "type": "json_object" } if need_json_output else None
+            }
+
+            response = requests.post(
+                f"{self.base_url}/chat/completions",
+                headers=self.headers,
+                json=data
+            )
+            
+            if response.status_code != 200:
+                raise Exception(f"OpenRouter API error: {response.text}")
+            
+            response_data = response.json()
+            content = response_data['choices'][0]['message']['content'].strip()
+            
+            if need_json_output:
+                return parse_json_markdown(content)
+            else:
+                return content
+        
+        except Exception as e:
+            print(e)
+            st.error(f"Error in OpenRouter API, {e}")
+            st.markdown("<h3 style='text-align: center;'>Please try again! Check the log in the dropdown for more details.</h3>", unsafe_allow_html=True)
+    
+    def get_embedding(self, text, model=GPT_EMBEDDING_MODEL, task_type="retrieval_document"):
+        try:
+            text = text.replace("\n", " ")
+            data = {
+                "model": model,
+                "input": [text]
+            }
+            
+            response = requests.post(
+                f"{self.base_url}/embeddings",
+                headers=self.headers,
+                json=data
+            )
+            
+            if response.status_code != 200:
+                raise Exception(f"OpenRouter API error: {response.text}")
+            
+            return response.json()['data'][0]['embedding']
         except Exception as e:
             print(e)
