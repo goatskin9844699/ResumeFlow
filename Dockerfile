@@ -19,13 +19,13 @@ RUN if [ -f packages.txt ]; then \
 # Install Streamlit separately
 RUN pip3 install --no-cache-dir streamlit
 
-# Install Playwright browsers and dependencies
-RUN playwright install chromium firefox webkit
-RUN playwright install-deps
-
 COPY resources/requirements.txt .
 # Install Python requirements
 RUN pip3 install --no-cache-dir -r requirements.txt
+
+# Install Playwright browsers and dependencies
+RUN playwright install chromium firefox webkit
+RUN playwright install-deps
 
 # Expose Streamlit port
 EXPOSE 8501
