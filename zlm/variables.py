@@ -19,8 +19,8 @@ GEMINI_EMBEDDING_MODEL = "models/text-embedding-004"
 
 OLLAMA_EMBEDDING_MODEL = "bge-m3"
 
-DEFAULT_LLM_PROVIDER = "Gemini"
-DEFAULT_LLM_MODEL = "gemini-1.5-flash"
+DEFAULT_LLM_PROVIDER = "OpenRouter"
+DEFAULT_LLM_MODEL = "mistralai/mistral-large-2407"
 
 LLM_MAPPING = {
     'GPT': {
