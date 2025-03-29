@@ -18,7 +18,7 @@ import streamlit as st
 from zlm import AutoApplyModel
 from zlm.utils.utils import display_pdf, download_pdf, read_file, read_json
 from zlm.utils.metrics import jaccard_similarity, overlap_coefficient, cosine_similarity
-from zlm.variables import LLM_MAPPING, DEFAULT_LLM_PROVIDER
+from zlm.variables import LLM_MAPPING, DEFAULT_LLM_PROVIDER, DEFAULT_OPENROUTER_MODEL
 from zlm.utils.llm_models import OpenRouter
 
 # Load environment variables from .env file
@@ -130,12 +130,20 @@ try:
                     st.session_state.openrouter_models = openrouter.get_available_models()
                 except Exception as e:
                     st.warning("Could not fetch OpenRouter models. Using default list.")
-                    st.session_state.openrouter_models = ["mistralai/mistral-large-2407", "mistralai/mistral-7b-instruct"]
+                    st.session_state.openrouter_models = [
+                        DEFAULT_OPENROUTER_MODEL,
+                        "anthropic/claude-3-opus-20240229",
+                        "anthropic/claude-3-sonnet-20240229",
+                        "meta-llama/codellama-70b-instruct",
+                        "google/gemini-pro",
+                        "openai/gpt-4-turbo-preview",
+                        "openai/gpt-3.5-turbo"
+                    ]
             
             available_models = st.session_state.openrouter_models
-            # Find index of mistralai/mistral-large-2407
+            # Find index of default model
             try:
-                default_index = available_models.index("mistralai/mistral-large-2407")
+                default_index = available_models.index(DEFAULT_OPENROUTER_MODEL)
             except ValueError:
                 default_index = 0
             model = st.selectbox("Select model:", available_models, index=default_index)
