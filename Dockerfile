@@ -1,0 +1,34 @@
+# Use the same base image as devcontainer
+FROM mcr.microsoft.com/devcontainers/python:1-3.11-bullseye
+
+# Set working directory
+WORKDIR /app
+
+# Copy only requirements files first to leverage cache
+COPY resources/requirements.txt .
+COPY packages.txt .
+
+# Install system packages if packages.txt exists
+RUN if [ -f packages.txt ]; then \
+        apt-get update && \
+        apt-get upgrade -y && \
+        xargs apt-get install -y < packages.txt && \
+        apt-get clean && \
+        rm -rf /var/lib/apt/lists/*; \
+    fi
+
+# Install Python requirements
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+# Install Streamlit separately
+RUN pip3 install --no-cache-dir streamlit
+
+# Install Playwright browsers and dependencies
+RUN playwright install chromium firefox webkit
+RUN playwright install-deps
+
+# Expose Streamlit port
+EXPOSE 8501
+
+# Set the entrypoint to run Streamlit
+ENTRYPOINT ["streamlit", "run", "web_app.py", "--server.enableCORS", "false", "--server.enableXsrfProtection", "false"] 
