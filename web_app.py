@@ -18,7 +18,7 @@ import streamlit as st
 from zlm import AutoApplyModel
 from zlm.utils.utils import display_pdf, download_pdf, read_file, read_json
 from zlm.utils.metrics import jaccard_similarity, overlap_coefficient, cosine_similarity
-from zlm.variables import LLM_MAPPING
+from zlm.variables import LLM_MAPPING, DEFAULT_LLM_PROVIDER
 from zlm.utils.llm_models import OpenRouter
 
 # Load environment variables from .env file
@@ -118,7 +118,9 @@ try:
 
     col_1, col_2, col_3 = st.columns(3)
     with col_1:
-        provider = st.selectbox("Select provider([OpenAI](https://openai.com/blog/openai-api), [Gemini Pro](https://ai.google.dev/)):", LLM_MAPPING.keys())
+        # Find index of default provider
+        default_provider_index = list(LLM_MAPPING.keys()).index(DEFAULT_LLM_PROVIDER)
+        provider = st.selectbox("Select provider([OpenAI](https://openai.com/blog/openai-api), [Gemini Pro](https://ai.google.dev/)):", LLM_MAPPING.keys(), index=default_provider_index)
     with col_2:
         if provider == "OpenRouter":
             # Initialize OpenRouter without API key to fetch models
