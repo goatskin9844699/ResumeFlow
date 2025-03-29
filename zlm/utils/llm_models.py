@@ -179,7 +179,7 @@ class OllamaModel:
             print(e)
 
 class OpenRouter:
-    def __init__(self, api_key=None, model="openai/gpt-4", system_prompt=""):
+    def __init__(self, api_key=None, model="mistralai/mistral-large-2407", system_prompt=""):
         self.api_key = get_api_key("OpenRouter", api_key)
         self.model = model
         self.system_prompt = system_prompt
@@ -215,6 +215,11 @@ class OpenRouter:
             models_data = response.json()
             # Extract model IDs from the response
             self._available_models = [model['id'] for model in models_data.get('data', [])]
+            
+            # Ensure mistralai/mistral-large-2407 is available and set as default
+            if "mistralai/mistral-large-2407" not in self._available_models:
+                self._available_models.insert(0, "mistralai/mistral-large-2407")
+            
             self._last_model_fetch = current_time
             return self._available_models
             
@@ -222,6 +227,7 @@ class OpenRouter:
             print(f"Error fetching OpenRouter models: {e}")
             # Return default models if API call fails
             return [
+                "mistralai/mistral-large-2407",  # Set as first/default model
                 "anthropic/claude-3-opus-20240229",
                 "anthropic/claude-3-sonnet-20240229",
                 "meta-llama/codellama-70b-instruct",

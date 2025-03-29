@@ -124,7 +124,9 @@ try:
             # Initialize OpenRouter without API key to fetch models
             openrouter = OpenRouter(api_key="", model="", system_prompt="")
             available_models = openrouter.get_available_models()
-            model = st.selectbox("Select model:", available_models)
+            # Find index of mistralai/mistral-large-2407
+            default_index = available_models.index("mistralai/mistral-large-2407")
+            model = st.selectbox("Select model:", available_models, index=default_index)
         else:
             model = st.selectbox("Select model:", LLM_MAPPING[provider]['model'])
     with col_3:
