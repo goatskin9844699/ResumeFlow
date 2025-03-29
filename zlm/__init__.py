@@ -116,6 +116,9 @@ class AutoApplyModel:
 
         Returns:
             dict: The extracted user data in JSON format.
+
+        Raises:
+            Exception: If the file format is invalid or if the JSON structure doesn't match the required schema.
         """
         print("\nFetching user data...")
 
@@ -127,10 +130,21 @@ class AutoApplyModel:
         if extension == ".pdf":
             user_data = self.resume_to_json(user_data_path)
         elif extension == ".json":
-            user_data = utils.read_json(user_data_path)
+            with open(user_data_path, 'r') as f:
+                json_str = f.read()
+            try:
+                # Validate against schema with improved error messages
+                user_data = ResumeSchema.validate_json(json_str)
+            except Exception as e:
+                raise Exception(f"Invalid resume data structure:\n{str(e)}")
         elif validators.url(user_data_path):
             user_data = read_data_from_url([user_data_path])
-            pass
+            try:
+                # Validate against schema with improved error messages
+                json_str = json.dumps(user_data)
+                user_data = ResumeSchema.validate_json(json_str)
+            except Exception as e:
+                raise Exception(f"Invalid resume data structure from URL:\n{str(e)}")
         else:
             raise Exception("Invalid file format. Please provide a PDF, JSON file or url.")
         
