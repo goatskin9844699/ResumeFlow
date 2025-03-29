@@ -20,7 +20,7 @@ from langchain_core.output_parsers import JsonOutputParser
 from zlm.schemas.sections_schemas import ResumeSchema
 from zlm.utils import utils
 from zlm.utils.latex_ops import latex_to_pdf
-from zlm.utils.llm_models import ChatGPT, Gemini, OllamaModel
+from zlm.utils.llm_models import ChatGPT, Gemini, OllamaModel, OpenRouter
 from zlm.utils.data_extraction import read_data_from_url, extract_text
 from zlm.utils.metrics import jaccard_similarity, overlap_coefficient, cosine_similarity, vector_embedding_similarity
 from zlm.prompts.resume_prompt import CV_GENERATOR, RESUME_WRITER_PERSONA, JOB_DETAILS_EXTRACTOR, RESUME_DETAILS_EXTRACTOR
@@ -78,6 +78,8 @@ class AutoApplyModel:
             return Gemini(api_key=self.api_key, model=self.model, system_prompt=self.system_prompt)
         elif self.provider == "Ollama":
             return OllamaModel(model=self.model, system_prompt=self.system_prompt)
+        elif self.provider == "OpenRouter":
+            return OpenRouter(api_key=self.api_key, model=self.model, system_prompt=self.system_prompt)
         else:
             raise Exception("Invalid LLM Provider")
 

@@ -31,6 +31,10 @@ LLM_MAPPING = {
         "api_env": "GEMINI_API_KEY",
         "model": ["gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-1.5-pro", "gemini-1.5-pro-latest", "gemini-1.5-pro-exp-0801"], # "gemini-1.0-pro", "gemini-1.0-pro-latest"
     },
+    'OpenRouter': {
+        "api_env": "OPENROUTER_API_KEY",
+        "model": [],  # Models will be fetched dynamically
+    },
     # 'Ollama': {
     #     "api_env": None,
     #     "model": ['llama3.1', 'llama3'],
