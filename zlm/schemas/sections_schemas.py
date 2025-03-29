@@ -121,10 +121,10 @@ class Experiences(BaseModel):
     work_experience: List[Experience] = Field(description="Work experiences, including job title, company, location, dates, and description.")
 
 class Media(BaseModel):
-    linkedin: Optional[HttpUrl] = Field(description="LinkedIn profile URL")
-    github: Optional[HttpUrl] = Field(description="GitHub profile URL")
-    medium: Optional[HttpUrl] = Field(description="Medium profile URL")
-    devpost: Optional[HttpUrl] = Field(description="Devpost profile URL")
+    linkedin: Optional[HttpUrl] = Field(description="LinkedIn profile URL", default=None)
+    github: Optional[HttpUrl] = Field(description="GitHub profile URL", default=None)
+    medium: Optional[HttpUrl] = Field(description="Medium profile URL", default=None)
+    devpost: Optional[HttpUrl] = Field(description="Devpost profile URL", default=None)
 
 class ResumeSchema(BaseModel):
     name: str = Field(description="The full name of the candidate.")
